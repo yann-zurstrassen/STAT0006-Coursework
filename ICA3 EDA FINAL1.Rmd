@@ -1,0 +1,174 @@
+---
+title: "ICA 3 EDA"
+author: "Yann Zurstrassen"
+date: "19/12/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("/Users/yannzurstrassen/Library/Mobile Documents/com~apple~CloudDocs/Year_2_UCL/STAT0006/ICA/ICA 3/")
+ice_creams <- read.csv("ice_creams (1).csv", header=TRUE)
+```
+
+The sales team of an ice cream company was interested in learning how their weekly sales across certain stores changed from a week to another. They therefore recorded the weekly sales and in addition recorded a certain amount of covaraites which they thought could have an effect on the sales of ice cream. These are brand, the amount of brand competitors at the same store during that week, the distance to the closest other store, whether there was a bank holiday during that week, the average price of milk during that week, if there was a promotion on ice cream, the store type, the average temperature at the location of the store over that week, the average wind speed at the location of the store over the week and the year the week is in. The covariates and the weekly sales were recorded 314 times over a period of 5 years. This makes 3,454 data points. 
+Please not that some of the data was missing and was therefore omitted as it only represented a very small proportion of the data set.
+
+For this initial exploratory data analysis, we will be looking at the effect each predictor or covariate has on the weekly sales of ice cream. 
+
+
+The first covariate is categorizing the sales by brand. These are brand A, brand B and brand C. If we have a look at at a box plot (figure 1) of those three brands, we can see a significant difference between the sales of these three brands of ice creams. Brand A has a significantly higher higher distribution and a higher sample mean. This is followed then by brand B having a lower sample mean and then brand C with an even lower one. The same relationship can be seen if we consider the total sales of ice creams across all weeks and all stores. 
+
+``` {r echo=FALSE, fig.cap="Boxplot and barplot of Weekly and total sales of ice cream per brand."}
+
+par(mfrow=c(1,2))
+
+
+boxplot(ice_creams$sales ~ ice_creams$brand, main="Weekly sales per brand", ylab = "Ice creams sales per week", xlab="Ice cream brand")
+
+totalsales <- data.frame(
+  name = c("BrandA", "BrandB", "BrandC"),
+  brandsales = c(85079,49773,31687))
+barplot(totalsales$brandsales,
+        main="Total sales per brand",
+        xlab = "Ice Cream Brand",
+        ylab = "Ice Cream Sales",
+        names.arg = c("BrandA", "BrandB", "BrandC"))
+```
+
+The next covariate that will be considered are brand competitors, these are the amount of other ice cream brand available to buy in that store that week. These range from 3 brand competitors to 9 brand competitors. We can see from the box plot (figure 2) that there might be a linear relationship between ice cream sales and brand competitors. This is counter intuitive as we would expect that for more brand competitors consumers would choose other types of ice creams. However this could be explained by theorizing that the more brand competitors there are, the bigger the store and the more consumers come and shop overall. 
+
+```{r echo=FALSE, fig.cap="Boxplot showing the weelky sales with the presence of different amounts of brand competitors."}
+boxplot(ice_creams$sales ~ ice_creams$brand_competitors, main="Weelky sales with different amounts of brand competitors" ,ylab="Ice creams sales per week", xlab="Number of brand compeititors", title="Ice_cream sales against brand competitors")
+reg <- lm(sales~ brand_competitors, data = ice_creams)
+abline(reg, col="blue")
+```
+
+The third covariate is the distance in miles to the closest store selling ice cream. The scatter plot of weekly sales against distance from competitor supermarkets (figure 3) reveals a fairly clear positive association with a Pearson correlation coefficient of ~0.49, indicating that, unsurprisingly, weekly sales outcomes tend to improve when competitors are further away.
+
+```{r echo=FALSE, fig.cap="Scatterplot of sales against the distance from competitor supermarkets."}
+plot(ice_creams$distance~ice_creams$sales, main = "Sales against Distance from Competitor Supermarkets", xlab = "Distance (miles)", ylab = "Weekly Sales",pch = 16,cex = 0.6)
+abline(lm(ice_creams$distance~ice_creams$sales),col="blue")
+```
+
+It can be seen that the mean sales per week for both holiday (Y) and non-holiday (N) periods (figure 5) are close together (mean sales of N is ~513 and mean of Y is ~633) and both display positive skewness, however during holiday periods, the spread of the data is larger and skews even more positively.
+
+```{r echo=FALSE, fig.cap="Boxplot of sales for weeks with [y] or without [n] a bank holiday."}
+
+boxplot(ice_creams$sales~ice_creams$holiday, main = "Sales for weeks With (Y) or Without (N) a Bank holiday",xlab = "Bank Holiday",ylab = "Weekly Sales", col = c("red3","springgreen4"))
+
+```
+
+The below histograms (figure 6) show that most weeks, the number of ice cream sales with no bank holidays are close to the mean, whereas most bank holiday weeks result in fewer ice cream sales with the exception of some weeks where sale numbers are extremely high.
+
+```{r ehco=FALSE, fig.cap="Histogram of sales with [green] and without [red] bank holidays."}
+
+par(mfrow=c(1,2))
+
+Y <- subset(ice_creams,holiday=="Y")
+N <- subset(ice_creams,holiday=="N")
+hist(Y$sales,breaks = 10, main=NULL,  xlab = "Sales With Bank Holidays", col = "springgreen4")
+
+hist(N$sales,breaks = 10, main=NULL,  xlab = "Sales Without Bank Holidays", col = "red3")
+
+mtext("Sales with and without bank holidays", font = 2, cex.main = 2, side = 3, line = -1, outer = TRUE)
+
+```
+
+
+In the plot below (figure 7) we can see the relation between the price of milk and the sales of ice creams over a week across brands A, B and C. We it is clear from the plot that the price of milk has no effect on the weekly sales of ice creams. This can be explained as the price of ice cream would not be affected by this change but the companies would simply have different profit margins during that week. 
+
+``` {r echo=FALSE, fig.cap="Scatterplot of the price of milk against the weekly sales of ice cream."}
+
+plot(ice_creams$milk[ice_creams$brand=="BrandA"], ice_creams$sales[ice_creams$brand=="BrandA"],xlab="Weekly price of milk", ylab="Sales in a week", main ="Price of milk against weekly sales of ice cream", col="blue", pch="o", lty=1)
+
+points(ice_creams$milk[ice_creams$brand=="BrandB"], ice_creams$sales[ice_creams$brand=="BrandB"], col="red2", pch="*")
+
+points(ice_creams$milk[ice_creams$brand=="BrandC"], ice_creams$sales[ice_creams$brand=="BrandC"], col="springgreen4", pch="+")
+
+legend("bottomright",legend=c("BrandA","BrandB","BrandC"), col=c("blue", "red2", "springgreen4"), pch=c("o","*","+"),lty=c(1,2,3), ncol=1)
+
+abline(lm(ice_creams$sales[ice_creams$brand=="BrandA"] ~ ice_creams$milk[ice_creams$brand=="BrandA"]), col='blue' , lty='dashed')
+
+abline(lm(ice_creams$sales[ice_creams$brand=="BrandB"] ~ ice_creams$milk[ice_creams$brand=="BrandB"]), col='red2' , lty='dashed')
+
+abline(lm(ice_creams$sales[ice_creams$brand=="BrandC"] ~ ice_creams$milk[ice_creams$brand=="BrandC"]), col='springgreen4' , lty='dashed')
+```
+
+
+The next covariate that will be considered is the effect of a promotion or a deal on ice creams, on sales. This is if there was a deal or promotion on ice cream during the week. A promotion would affect the price of ice creams so we would expect an increase in sales. It is clear for the plot below (figure 8) that a promotion has a clear effect on ice creams sold. The mean of sales with promotion is 633 while it is only 513 for weeks without a promotion. 
+
+
+``` {r echo=FALSE, fig.cap="Boxplot of sales for weeks with [red] or without [green] a promotion on ice cream."}
+
+boxplot(ice_creams$sales~ice_creams$promotion, main = "Sales for weeks With (Y) or Without (N) a promotion on ice cream",xlab = "Promotion",ylab = "Weekly Sales", col = c("red3","springgreen4"))
+
+```
+
+The plot (figure 9) show the total sales for different store types and divided into different brands. As expected, larger stores perform better in total than smaller stores. The breakdown per brand is not very surprising either as we can see that BrandA makes up for most of the sales across all stores. 
+
+``` {r, echo=FALSE, fig.cap="Parplot of the total sales by different types of stores and of different brands of ice cream."}
+colors = c("blue","red2","springgreen4")
+brand <- c("BrandA","BrandB","BrandC")
+store <- c("Small","Medium","Large")
+
+values <- matrix(c(21018, 23776, 40285, 16684, 13517, 18246, 9535, 13666, 8486), nrow = 3, ncol = 3, byrow = TRUE)
+barplot(values,main="Total sales of ice cream per type of store", names.arg= store, xlab="Type of store", ylab="Sales", col=colors)
+legend("bottomright", brand, cex = 1.3, fill = colors)
+```
+ 
+Now looking at the effect of the average weekly temperature at the location of the store measured in degrees celsius on the sales of ice creams at that specific store. For this covariate, there could be some trend as we would expect people to buy more ice cream when it is warmer outside. Considering (figure 10), we can see from the lines of best fit that for some increase in temperature, there is an increase in ice creams sold, as expected. Also, looking at the different brands, there does not appear to be one that reacts more than the others to a change in temperature. 
+
+``` {r echo=FALSE, fig.cap="Scatter plot of the sales of ice cream for a particular store against the weekly average temperature of the store"}
+plot(ice_creams$temperature[ice_creams$brand=="BrandA"], ice_creams$sales[ice_creams$brand=="BrandA"],xlab="Temperature (Celsius)", ylab="Sales in a week",col="blue", pch="o", lty=1)
+
+points(ice_creams$temperature[ice_creams$brand=="BrandB"], ice_creams$sales[ice_creams$brand=="BrandB"], col="red2", pch="*")
+
+points(ice_creams$temperature[ice_creams$brand=="BrandC"], ice_creams$sales[ice_creams$brand=="BrandC"], col="springgreen4", pch="+")
+
+legend("bottomright",legend=c("BrandA","BrandB","BrandC"), col=c("blue", "red2", "springgreen4"), pch=c("o","*","+"),lty=c(1,2,3), ncol=1)
+
+abline(lm(ice_creams$sales[ice_creams$brand=="BrandA"] ~ ice_creams$temperature[ice_creams$brand=="BrandA"]), col='blue' , lty='dashed')
+
+abline(lm(ice_creams$sales[ice_creams$brand=="BrandB"] ~ ice_creams$temperature[ice_creams$brand=="BrandB"]), col='red2' , lty='dashed')
+
+abline(lm(ice_creams$sales[ice_creams$brand=="BrandC"] ~ ice_creams$temperature[ice_creams$brand=="BrandC"]), col='springgreen4' , lty='dashed')
+```
+
+The next covaraite that will be considered is wheter the wind has any effect on the sale of ice creams. More specifically the average weekly wind speed at the location of the shop measured in knots. Here, when producing a similar plot (figure 11) to that for temperature, no relationship can be observed between the number of weekly sales and the average wind speed during that week. (probably best to not include this covariate at all) 
+
+
+``` {r echo=FALSE, fig.cap="Scatter plot of the sales of ice cream for a particular store against the weekly average temperature of the store"}
+plot(ice_creams$wind[ice_creams$brand=="BrandA"], ice_creams$sales[ice_creams$brand=="BrandA"],main="Weekly sales against the wind speed at the location of the store", xlab="Wind speed (Knots)", ylab="Sales in a week",col="blue", pch="o", lty=1)
+
+points(ice_creams$wind[ice_creams$brand=="BrandB"], ice_creams$sales[ice_creams$brand=="BrandB"], col="red2", pch="*")
+
+points(ice_creams$wind[ice_creams$brand=="BrandC"], ice_creams$sales[ice_creams$brand=="BrandC"], col="springgreen4", pch="+")
+
+legend("bottomright",legend=c("BrandA","BrandB","BrandC"), col=c("blue", "red2", "springgreen4"), pch=c("o","*","+"),lty=c(1,2,3), ncol=1)
+
+abline(lm(ice_creams$sales[ice_creams$brand=="BrandA"] ~ ice_creams$wind[ice_creams$brand=="BrandA"]), col='blue' , lty='dashed')
+
+abline(lm(ice_creams$sales[ice_creams$brand=="BrandB"] ~ ice_creams$wind[ice_creams$brand=="BrandB"]), col='red2' , lty='dashed')
+
+abline(lm(ice_creams$sales[ice_creams$brand=="BrandC"] ~ ice_creams$wind[ice_creams$brand=="BrandC"]), col='springgreen4' , lty='dashed')
+```
+
+Now the last covariate is the year in which the number of sales has been recorded. This is expected to have some relationship as some years could have a hotter average temperature for example or consumers preference could simply change. Here, we can see the overall trend being downwards (figure 12) showing that consumers are being less ice cream every year. The exception is the year 2018 which where there is a significant increase in sales between 2018 and 2019. This could simply be due to starting to record sales not at the beginning of 2018 and doing so for every other year. 
+
+``` {r echo=FALSE, fig.cap="Barplot of the total sales from 2018 to 2021."}
+colors = c("blue","red2","springgreen4")
+years <- c("2018","2019","2020","2021","2022")
+brands <- c("BrandA","BrandB","BrandC")
+
+values<- matrix(c(5609, 24406, 22308, 21419, 11337, 3491, 17633, 12267, 7497, 8885, 1764, 7087, 8659, 7776, 6401), nrow = 3, ncol = 5, byrow = TRUE)
+
+barplot(values, main = "Sales per year", names.arg = years, xlab = "year", ylab = "Total sales", col = colors)
+legend("topright", brands, cex = 1.3, fill = colors)
+
+```
+
+
+To conclude this exploratory data analysis, we can safely assume that not all covariates play a very extensive role at predicting the weekly sales of ice cream. Due to the principle of parsimony, we should then eliminate some irrelevant ones in our model building. Those irrelevant covariates are the wind speed at the location of each store and the price of milk. Also, we might considering some covariates we think might not be completely independent. This one is the presence of other competitor brands in the store and the store size. As the store size is larger, we would expect for there to be more costumers and more competitors so the effect is hard to asses. One last covariate we should consider seperately is the year in which the recording was made. There seems to be in 2018 an incomplete year , and also 2022 as that year is not over yet. Thus, each is not weighing the same in the assessment. 
